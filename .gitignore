@@ -1,0 +1,5 @@
+.ghc.environment*
+dist-newstyle/
+static/dashboard.js
+static/overlay.js
+elm-stuff
