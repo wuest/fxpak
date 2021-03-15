@@ -1,7 +1,8 @@
-{-# language DataKinds    #-}
-{-# language GADTs        #-}
-{-# language TypeFamilies #-}
-{-# language ViewPatterns #-}
+{-# language DataKinds         #-}
+{-# language GADTs             #-}
+{-# language KindSignatures    #-}
+{-# language OverloadedStrings #-}
+{-# language ViewPatterns      #-}
 
 module FXPak ( FXPak
              , Opcode(..), Context(..), Arguments(..), FI.Flag(..), Flags
@@ -13,8 +14,9 @@ import Prelude
 import qualified System.Hardware.Serialport as Serial
 import qualified Data.ByteString.Char8 as BS
 
+import Control.Monad.IO.Class ( liftIO )
 import Data.Bits ( (.&.), shiftR )
-import Data.Char ( chr )
+import Data.Char ( chr, ord )
 
 import qualified FXPak.Internal as FI
 
@@ -63,12 +65,6 @@ data Arguments a where
     SetByte3     :: AddressSet -> AddressSet -> AddressSet -> Arguments (FI.Arguments' ('FI.SetByte3 (a :: (AddressSet, AddressSet, AddressSet))))
     SetByte4     :: AddressSet -> AddressSet -> AddressSet -> AddressSet -> Arguments (FI.Arguments' ('FI.SetByte4 (a :: (AddressSet, AddressSet, AddressSet, AddressSet))))
 
-open :: FilePath -> IO FXPak
-open = flip Serial.openSerial Serial.defaultSerialSettings
-
-send :: FXPak -> Packet -> IO ()
-send dev dat = Serial.send dev (pack dat) >> return ()
-
 context :: Context (FI.Context' c) -> FI.Context' c
 context File   = FI.File'
 context SNES   = FI.SNES'
@@ -107,8 +103,28 @@ arguments (SetByte2 a b)      = FI.SetByte2' a b
 arguments (SetByte3 a b c)    = FI.SetByte3' a b c
 arguments (SetByte4 a b c d)  = FI.SetByte4' a b c d
 
+open :: FilePath -> IO FXPak
+open = flip Serial.openSerial Serial.defaultSerialSettings
+
 packet :: (FI.ValidPacket c o a ~ 'True) => Context (FI.Context' c) -> Opcode (FI.Opcode' o) -> Flags -> Arguments (FI.Arguments' a) -> Packet
 packet (context -> c) (opcode -> o) flags (arguments -> a) = FI.packet c o flags a
+
+send :: FXPak -> Packet -> IO (Maybe BS.ByteString)
+send dev dat = do
+    _ <- Serial.send dev (pack dat)
+    let (FI.Packet _ _ flags _) = dat
+    if elem FI.NoResponse flags
+        then return Nothing
+        else do
+            resp <- liftIO (readSerial 512 dev [])
+            let resp' = BS.unpack resp in
+                if ((take 5 resp') /= ['U', 'S', 'B', 'A', '\x0F'])
+                    then return Nothing
+                    else fetch dev (fmap ord $ ((drop 255) . (take 256)) resp')
+
+fetch :: FXPak -> [Int] -> IO (Maybe BS.ByteString)
+fetch _ []         = return Nothing
+fetch dev (size:_) = Just <$> (readSerial size dev [])
 
 pack :: Packet -> BS.ByteString
 pack (FI.Packet o c f a) =
@@ -165,3 +181,13 @@ fromAddressSet (addr, byte) =
 
 nulls :: Int -> String
 nulls x = take x $ fmap chr $ repeat 0x00
+
+readSerial :: Int -> FXPak -> [BS.ByteString] -> IO BS.ByteString
+readSerial size dev bufs =
+    let currSize = (sum $ fmap BS.length bufs)
+    in
+        if currSize >= size
+           then return $ foldl BS.append "" $ reverse bufs
+           else do
+               dat <- Serial.recv dev $ size - currSize
+               readSerial size dev $ dat:bufs
