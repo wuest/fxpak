@@ -2,6 +2,17 @@
 {-# language GADTs        #-}
 {-# language TypeFamilies #-}
 {-# language ViewPatterns #-}
+{- |
+Module      :  FXPak.Internal
+Copyright   :  (c) Christina Wuest 2021
+License     :  BSD-style
+
+Maintainer  :  tina@wuest.me
+Stability   :  experimental
+Portability :  non-portable
+
+Internals for FXPak - ensures only valid packets can be encoded.
+-}
 
 module FXPak.Internal where
 
@@ -71,8 +82,14 @@ opcode Stream'     = Stream
 opcode Time'       = Time
 opcode Response'   = Response
 
-type AddressGet = (Int, Int)
-type AddressSet = (Int, Int)
+data AddressGet = AddressGet { start      :: Int
+                             , dataLength :: Int
+                             } deriving ( Show )
+
+data AddressSet = AddressSet { target :: Int
+                             , value  :: Int
+                             } deriving ( Show )
+
 data Arguments = None
                | Path FilePath
                | PathContents FilePath BS.ByteString

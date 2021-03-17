@@ -3,9 +3,23 @@
 {-# language KindSignatures    #-}
 {-# language OverloadedStrings #-}
 {-# language ViewPatterns      #-}
+{- |
+Module      :  FXPak
+Copyright   :  (c) Christina Wuest 2021
+License     :  BSD-style
+
+Maintainer  :  tina@wuest.me
+Stability   :  experimental
+Portability :  non-portable
+
+Interface to working with the FXPak/FXPak Pro flash cart devices for the
+SNES/Super Famicom
+-}
 
 module FXPak ( FXPak
-             , Opcode(..), Context(..), Arguments(..), FI.Flag(..), Flags
+             , Packet, Opcode(..), Context(..), Arguments(..)
+             , FI.AddressGet(..), FI.AddressSet(..)
+             , FI.Flag(..), Flags
              , open, packet, send
              ) where
 
@@ -24,8 +38,8 @@ type FXPak = Serial.SerialPort
 type Packet = FI.Packet
 
 type Flags = FI.Flags
-type AddressGet = (Int, Int)
-type AddressSet = (Int, Int)
+type AddressGet = FI.AddressGet
+type AddressSet = FI.AddressSet
 
 data Context c where
     File   :: Context (FI.Context' 'FI.File)
@@ -164,20 +178,22 @@ pack512 (FI.SetByte addrSet) tmp = BS.pack $ tmp ++ (nulls 245) ++ (fromAddressS
 pack512 _ _ = undefined
 
 fromAddressGet :: AddressGet -> String
-fromAddressGet (addr, size) =
-    let validSize = chr $ 0xFF .&. size
+fromAddressGet ag =
+    let validSize = chr $ (0xFF .&.) $ FI.dataLength ag
+        addr = FI.start ag
         addrhi = chr $ 0xFF .&. (shiftR addr 16)
         addrmid = chr $ 0xFF .&. (shiftR addr 8)
         addrlow = chr $ 0xFF .&. addr
     in (nulls 3) ++ [validSize, chr 0x00, addrhi, addrmid, addrlow]
 
 fromAddressSet :: AddressSet -> String
-fromAddressSet (addr, byte) =
-    let byte' = chr $ 0xFF .&. byte
+fromAddressSet as =
+    let addr = FI.target as
+        byte = chr $ (0xFF .&.) $ FI.value as
         addrhi = chr $ 0xFF .&. (shiftR 16 addr)
         addrmid = chr $ 0xFF .&. (shiftR 8 addr)
         addrlow = chr $ 0xFF .&. addr
-    in (nulls 3) ++ [byte', chr 0x00, addrhi, addrmid, addrlow]
+    in (nulls 3) ++ [byte, chr 0x00, addrhi, addrmid, addrlow]
 
 nulls :: Int -> String
 nulls x = take x $ fmap chr $ repeat 0x00
