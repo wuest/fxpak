@@ -10,3 +10,7 @@
 
 * Moved module under System.Hardware
 * Bumped version dependencies
+
+## 0.1.1 -- 2021-04-06
+
+* Tested against ByteString 0.10, relaxed dependency constraint
