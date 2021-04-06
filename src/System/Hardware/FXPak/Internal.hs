@@ -3,7 +3,7 @@
 {-# language TypeFamilies #-}
 {-# language ViewPatterns #-}
 {- |
-Module      :  FXPak.Internal
+Module      :  System.Hardware.FXPak.Internal
 Copyright   :  (c) Christina Wuest 2021
 License     :  BSD-style
 
@@ -14,7 +14,7 @@ Portability :  non-portable
 Internals for FXPak - ensures only valid packets can be encoded.
 -}
 
-module FXPak.Internal where
+module System.Hardware.FXPak.Internal where
 
 import Prelude
 

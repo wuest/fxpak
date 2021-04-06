@@ -4,7 +4,7 @@
 {-# language OverloadedStrings #-}
 {-# language ViewPatterns      #-}
 {- |
-Module      :  FXPak
+Module      :  System.Hardware.FXPak
 Copyright   :  (c) Christina Wuest 2021
 License     :  BSD-style
 
@@ -16,12 +16,12 @@ Interface to working with the FXPak/FXPak Pro flash cart devices for the
 SNES/Super Famicom
 -}
 
-module FXPak ( FXPak
-             , Packet, Opcode(..), Context(..), Arguments(..)
-             , FI.AddressGet(..), FI.AddressSet(..)
-             , FI.Flag(..), Flags
-             , open, packet, send
-             ) where
+module System.Hardware.FXPak ( FXPak
+                             , Packet, Opcode(..), Context(..), Arguments(..)
+                             , FI.AddressGet(..), FI.AddressSet(..)
+                             , FI.Flag(..), Flags
+                             , open, packet, send
+                             ) where
 
 import Prelude
 
@@ -32,7 +32,7 @@ import Control.Monad.IO.Class ( liftIO )
 import Data.Bits ( (.&.), shiftR )
 import Data.Char ( chr, ord )
 
-import qualified FXPak.Internal as FI
+import qualified System.Hardware.FXPak.Internal as FI
 
 -- | An FXPak device (which is exposed as a serial device)
 type FXPak = Serial.SerialPort
