@@ -1,5 +1,5 @@
 name:                fxpak
-version:             0.1.1
+version:             0.1.2
 synopsis:            Interface to the FXPak/FXPak Pro USB interface
 description:         Wraps Serial interaction with FXPak/FXPak Pro devices
 homepage:            https://github.com/wuest/fxpak

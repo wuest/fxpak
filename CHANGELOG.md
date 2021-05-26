@@ -14,3 +14,7 @@
 ## 0.1.1 -- 2021-04-06
 
 * Tested against ByteString 0.10, relaxed dependency constraint
+
+## 0.1.2 -- 2021-05-26
+
+* Added `with` as a wrapper for Serialport.withSerial

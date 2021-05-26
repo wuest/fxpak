@@ -20,7 +20,7 @@ module System.Hardware.FXPak ( FXPak
                              , Packet, Opcode(..), Context(..), Arguments(..)
                              , FI.AddressGet(..), FI.AddressSet(..)
                              , FI.Flag(..), Flags
-                             , open, packet, send
+                             , open, with, packet, send
                              ) where
 
 import Prelude
@@ -175,6 +175,9 @@ arguments (SetByte4 a b c d)  = FI.SetByte4' a b c d
 -- | Open a given serial device as an FXPak
 open :: FilePath -> IO FXPak
 open = flip Serial.openSerial Serial.defaultSerialSettings
+
+with :: FilePath -> (FXPak -> IO a) -> IO a
+with = flip Serial.withSerial Serial.defaultSerialSettings
 
 -- | Encode a packet to send to an FXPak, preventing encoding of invalid packets
 packet :: (FI.ValidPacket c o a ~ 'True) => Context (FI.Context' c) -> Opcode (FI.Opcode' o) -> Flags -> Arguments (FI.Arguments' a) -> Packet
