@@ -7,17 +7,21 @@ on:
     types:
       - opened
       - synchronize
+
+permissions:
+  contents: read
+
 jobs:
   build:
     strategy:
       matrix:
         cabal: ['3.2']
-        ghc: ['8.10']
-        os: ['ubuntu-latest']
+        ghc: ['8.10', '9.0']
+        os: ['ubuntu-20.04', 'ubuntu-22.04']
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      - uses: haskell/actions/setup@v1
+      - uses: haskell/actions/setup@v2
         with:
           ghc-version: ${{ matrix.ghc }}
           cabal-version: ${{ matrix.cabal }}
